@@ -36,12 +36,24 @@ function createRotatingBubble() {
     const radius = Math.random() * 20 + 10;
     const x = Math.random() * (canvas.width - radius * 2) + radius;
     const y = canvas.height + radius;
-    const rotation = 0;
+    const rotation = Math.random() * Math.PI * 2; // Zufällige Startrotation
     const rotationSpeed = Math.random() * 0.05 + 0.02;
-    const direction = Math.random() < 0.5 ? 1 : -1;
+    const direction = Math.random() < 0.5 ? 1 : -1; // Links oder rechts drehen
+    
 
-    rotatingBubble = { x, y, radius, rotation, rotationSpeed, direction, hasRotatedCorrectly: false };
+    
+
+    rotatingBubble = { 
+        x, 
+        y, 
+        radius, 
+        rotation,
+        rotationSpeed, 
+        direction, 
+        hasRotatedCorrectly: false 
+    };
 }
+
 
 function updateRotatingBubble() {
     if (rotatingBubble) {
@@ -93,38 +105,49 @@ function drawRotationGuide(bubble) {
     ctx.save();
     ctx.translate(bubble.x, bubble.y);
 
+    // Zeichne einen Kreis um die Blase
     ctx.beginPath();
-    ctx.arc(0, 0, bubble.radius + 15, 0, Math.PI * 2);
+    ctx.arc(0, 0, bubble.radius + 20, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.closePath();
 
-    const arrowLength = bubble.radius + 20;
-    const arrowAngle = bubble.rotation + (bubble.direction > 0 ? Math.PI / 4 : -Math.PI / 4);
-    const arrowHeadX = Math.cos(arrowAngle) * arrowLength;
-    const arrowHeadY = Math.sin(arrowAngle) * arrowLength;
+    // Berechne die Position und Richtung des Pfeils
+    const arrowRadius = bubble.radius + 25; // Abstand des Pfeils von der Blase
+    const arrowAngle = bubble.rotation; // Pfeil dreht sich mit der Blase
+    const arrowX = Math.cos(arrowAngle) * arrowRadius;
+    const arrowY = Math.sin(arrowAngle) * arrowRadius;
 
+    // Zeichne den Pfeil
     ctx.beginPath();
-    ctx.moveTo(Math.cos(bubble.rotation) * arrowLength, Math.sin(bubble.rotation) * arrowLength);
-    ctx.lineTo(arrowHeadX, arrowHeadY);
-    ctx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    const triangleSize = 15; // Größe des Dreiecks
+    ctx.moveTo(arrowX, arrowY); // Spitze des Pfeils
+    ctx.lineTo(
+        arrowX - triangleSize * Math.cos(arrowAngle - Math.PI / 6),
+        arrowY - triangleSize * Math.sin(arrowAngle - Math.PI / 6)
+    );
+    ctx.lineTo(
+        arrowX - triangleSize * Math.cos(arrowAngle + Math.PI / 6),
+        arrowY - triangleSize * Math.sin(arrowAngle + Math.PI / 6)
+    );
     ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.9)'; // Farbe des Pfeils
+    ctx.fill();
 
     ctx.restore();
 }
 
+
 function drawRotatingBubble() {
     if (rotatingBubble) {
-        drawRotationGuide(rotatingBubble);
+        drawRotationGuide(rotatingBubble); // Dynamischer Kreis und Pfeil
 
         ctx.save();
         ctx.translate(rotatingBubble.x, rotatingBubble.y);
         ctx.rotate(rotatingBubble.rotation);
 
-        // Leuchtender Effekt um die Blase, wenn korrekt rotiert
+        // Effekt um die Blase, wenn korrekt gedreht
         if (rotatingBubble.hasRotatedCorrectly) {
             ctx.beginPath();
             ctx.arc(0, 0, rotatingBubble.radius + 10, 0, Math.PI * 2);
@@ -144,7 +167,6 @@ function drawRotatingBubble() {
         ctx.restore();
     }
 }
-
 
 function drawBubbles() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -255,7 +277,7 @@ document.addEventListener('keydown', (event) => {
         } else if (event.key === 'ArrowRight') {
             rotatingBubble.rotation += rotationSpeed;
         }
-    }
+   }
 });
 
 function resetGame() {
