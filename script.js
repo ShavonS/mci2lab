@@ -8,10 +8,15 @@ let rotatingBubble = null;
 let score = 0;
 let missedBubbles = 0;
 let level = 1;
+
 const BASE_MAX_BUBBLES = 3;
 const MAX_MISSES = 3;
+
 let explosionParticles = [];
 let lastRotatingBubbleTime = 0;
+let touchPositions = [];
+let blackHoleActivated = false;
+
 
 function updateLevel() {
     level = Math.floor(score / 100) + 1;
@@ -75,8 +80,14 @@ function updateRotatingBubble() {
 
         // Entfernen, wenn die Blase den Bildschirm verlässt
         if (rotatingBubble.y + rotatingBubble.radius < 0) {
+            missedBubbles++;
+            if(missedBubbles >= MAX_MISSES) {
+                alert('Game Over!');
+                resetGame();
+            }
             rotatingBubble = null;
         }
+        
     }
 }
     
@@ -100,7 +111,6 @@ function updateBubbles() {
         updateRotatingBubble();
     }
 
-    //updateRotatingBubble();
 
     explosionParticles.forEach((particle, index) => {
         particle.radius *= 0.9;
@@ -279,14 +289,184 @@ function createExplosion(x, y, radius) {
     }
 }
 
+
+
 canvas.addEventListener('touchstart', (event) => {
     event.preventDefault();
+    if (event.touches.length === 2) {
+        touchPositions = Array.from(event.touches).map(touch => ({
+            x: touch.clientX - canvas.getBoundingClientRect().left,
+            y: touch.clientY - canvas.getBoundingClientRect().top,
+        }));
+    } else {
+        const touch = event.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        checkBubbleHit(x, y);
+    }
+});
+
+
+/*
+canvas.addEventListener('touchstart', (event) => {
+    event.preventDefault();
+    if(event.touches.length === 2) {
+        touchPositions = Array.from(event.touches).map(touch => ({
+            x: touch.clientX - canvas.getBoundingClientRect().left,
+            y: touch.clientY - canvas.getBoundingClientRect().top,
+        }));
+    }
     const touch = event.touches[0];
     const rect = canvas.getBoundingClientRect();
     const x = touch.clientX - rect.left;
     const y = touch.clientY - rect.top;
     checkBubbleHit(x, y);
 });
+*/
+
+canvas.addEventListener('touchmove', (event) => {
+    if (event.touches.length === 2 && touchPositions.length === 2) {
+        const currentTouches = Array.from(event.touches).map(touch => ({
+            x: touch.clientX - canvas.getBoundingClientRect().left,
+            y: touch.clientY - canvas.getBoundingClientRect().top,
+        }));
+
+        // Berechne den Abstand zwischen den beiden Fingern
+        const initialDistance = Math.hypot(
+            touchPositions[0].x - touchPositions[1].x,
+            touchPositions[0].y - touchPositions[1].y
+        );
+        const currentDistance = Math.hypot(
+            currentTouches[0].x - currentTouches[1].x,
+            currentTouches[0].y - currentTouches[1].y
+        );
+
+        // Aktiviere das schwarze Loch, wenn der Abstand stark zunimmt oder abnimmt
+        if (!blackHoleActivated && Math.abs(currentDistance - initialDistance) > 50) {
+            activateBlackHolePowerUp(
+                (currentTouches[0].x + currentTouches[1].x) / 2,
+                (currentTouches[0].y + currentTouches[1].y) / 2
+            );
+            blackHoleActivated = true;
+        }
+    }
+});
+
+
+canvas.addEventListener('touchend', () => {
+    // Setze die Geste zurück, wenn die Berührung endet
+    blackHoleActivated = false;
+    touchPositions = [];
+});
+
+
+
+function activateBlackHolePowerUp() {
+    const centerX = canvas.width / 2; // Mittelpunkt des Schwarzen Lochs
+    const centerY = canvas.height / 2;
+    const maxRadius = 150; // Maximaler Radius des Schwarzen Lochs (15 cm ~ 150 px)
+    const expansionRate = 5; // Wachstumsrate des Radius pro Frame
+    let currentRadius = 50; // Startgröße des Schwarzen Lochs
+    const maxDuration = 5000; // Dauer in Millisekunden 
+    const startTime = Date.now();
+
+    function animateBlackHole() {
+        const elapsedTime = Date.now() - startTime;
+
+        // Beende das Schwarze Loch nach Ablauf der maximalen Dauer
+        if (elapsedTime >= maxDuration) {
+            blackHoleActivated = false;
+            return;
+        }
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Bildschirm bereinigen
+        drawBubbles(); // Vorhandene Blasen zeichnen
+
+        // Zeichne das Schwarze Loch im Zentrum des Bildschirms
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, currentRadius, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fill();
+        ctx.closePath();
+        ctx.restore();
+
+        // Ziehe Blasen zum Schwarzen Loch
+        bubbles = bubbles.filter(bubble => {
+            const dist = Math.hypot(bubble.x - centerX, bubble.y - centerY);
+
+            if (dist < currentRadius) {
+                // Blase wird verschluckt
+                score += 10; // Punkte für jede verschluckte Blase
+                return false;
+            }
+
+
+            // Bewegung der Blasen in Richtung des Schwarzen Lochs
+            const angle = Math.atan2(centerY - bubble.y, centerX - bubble.x);
+            bubble.x += Math.cos(angle) * 2; // Bewegungsgeschwindigkeit
+            bubble.y += Math.sin(angle) * 2;
+
+            return true;
+        });
+
+        if (rotatingBubble) {
+            const dist = Math.hypot(rotatingBubble.x - centerX, rotatingBubble.y - centerY);
+            if (dist < currentRadius) {
+                rotatingBubble = null; // Verschlucke die rotierende Blase
+                score += 15; // Bonuspunkte
+            } else {
+                const angle = Math.atan2(centerY - rotatingBubble.y, centerX - rotatingBubble.x);
+                rotatingBubble.x += Math.cos(angle) * 2;
+                rotatingBubble.y += Math.sin(angle) * 2;
+            }
+        }
+
+        // Wachse bis zum maximalen Radius
+        if (currentRadius < maxRadius) {
+            currentRadius += expansionRate;
+        }
+
+        requestAnimationFrame(animateBlackHole);
+    }
+
+    animateBlackHole();
+}
+
+
+
+/*
+function drawBlackHoleCountdown() {
+    if (blackHoleActivated) {
+        const elapsedTime = Date.now() - blackHoleStartTime;
+        const remainingTime = Math.max(0, blackHoleDuration - elapsedTime);
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'white';
+        ctx.fillText(`Black Hole Active: ${(remainingTime / 1000).toFixed(1)}s`, 10, 50);
+
+        // Deaktivieren Sie das schwarze Loch, wenn die Zeit abgelaufen ist
+        if (remainingTime <= 0) {
+            blackHoleActivated = false;
+        }
+    }
+}
+    */
+
+
+
+
+document.addEventListener('keydown', (event) => {
+    const currentTime = Date.now();
+    if ((event.key === 'b' || event.key === 'B') && !blackHoleActivated && level >= 2 ) { 
+        const centerX = canvas.width / 2; // Schwarzes Loch in der Mitte
+        const centerY = canvas.height / 2;
+        alert('Black Hole Activated!');
+        activateBlackHolePowerUp(centerX, centerY);
+    }
+});
+
+
 
 canvas.addEventListener('mousedown', (event) => {
     const rect = canvas.getBoundingClientRect();
@@ -329,6 +509,7 @@ function gameLoop() {
     updateBubbles();
     updateLevel();
     drawBubbles();
+    //drawBlackHoleCountdown();
     requestAnimationFrame(gameLoop);
 }
 
