@@ -17,13 +17,18 @@ let lastRotatingBubbleTime = 0;
 let touchPositions = [];
 let blackHoleActivated = false;
 
+let lastBlackHoleTime = 0;
+const BLACK_HOLE_COOLDOWN = 20000;
+const BLACK_HOLE_DURATION = 5000;  // 5 Sekunden
+let blackHoleStartTime = 0;         
+
 
 function updateLevel() {
     level = Math.floor(score / 100) + 1;
 }
 
 function createBubble() {
-    const MAX_SPEED = 3;
+    const MAX_SPEED = 2;
     const baseSpeed = Math.random() * 1 + 0.5;
     const levelSpeed = Math.min(level * 0.1, 2);
     const speed = Math.min(baseSpeed + levelSpeed, MAX_SPEED);
@@ -365,23 +370,24 @@ canvas.addEventListener('touchend', () => {
 function activateBlackHolePowerUp() {
     const centerX = canvas.width / 2; // Mittelpunkt des Schwarzen Lochs
     const centerY = canvas.height / 2;
+    blackHoleActivated = true;
     const maxRadius = 150; // Maximaler Radius des Schwarzen Lochs (15 cm ~ 150 px)
     const expansionRate = 5; // Wachstumsrate des Radius pro Frame
     let currentRadius = 50; // Startgröße des Schwarzen Lochs
-    const maxDuration = 5000; // Dauer in Millisekunden 
     const startTime = Date.now();
 
     function animateBlackHole() {
         const elapsedTime = Date.now() - startTime;
 
         // Beende das Schwarze Loch nach Ablauf der maximalen Dauer
-        if (elapsedTime >= maxDuration) {
+        if (elapsedTime >= BLACK_HOLE_DURATION) {
             blackHoleActivated = false;
             return;
         }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Bildschirm bereinigen
         drawBubbles(); // Vorhandene Blasen zeichnen
+        drawBlackHoleCountdown(); 
 
         // Zeichne das Schwarze Loch im Zentrum des Bildschirms
         ctx.save();
@@ -436,26 +442,35 @@ function activateBlackHolePowerUp() {
 
 
 
-/*
 function drawBlackHoleCountdown() {
-    if (blackHoleActivated) {
-        const elapsedTime = Date.now() - blackHoleStartTime;
-        const remainingTime = Math.max(0, blackHoleDuration - elapsedTime);
+    const currentTime = Date.now();
+    const cooldownRemaining = Math.max(
+        0,
+        BLACK_HOLE_COOLDOWN - (currentTime - lastBlackHoleTime)
+    );
+
+    if(level < 2) {
+        return; 
+    }
+
+    if (cooldownRemaining > 0) {
         ctx.font = '20px Arial';
         ctx.fillStyle = 'white';
-        ctx.fillText(`Black Hole Active: ${(remainingTime / 1000).toFixed(1)}s`, 10, 50);
-
-        // Deaktivieren Sie das schwarze Loch, wenn die Zeit abgelaufen ist
-        if (remainingTime <= 0) {
-            blackHoleActivated = false;
-        }
+        ctx.fillText(
+            `Black Hole Ready in: ${(cooldownRemaining / 1000).toFixed(1)}s`,
+            350,
+            40
+        );
+    } else if (!blackHoleActivated) {
+        ctx.font = '20px Arial';
+        ctx.fillStyle = 'green';
+        ctx.fillText('Black Hole Ready! Press B.', 350, 40);
     }
 }
-    */
 
 
 
-
+/*
 document.addEventListener('keydown', (event) => {
     const currentTime = Date.now();
     if ((event.key === 'b' || event.key === 'B') && !blackHoleActivated && level >= 2 ) { 
@@ -465,7 +480,18 @@ document.addEventListener('keydown', (event) => {
         activateBlackHolePowerUp(centerX, centerY);
     }
 });
-
+*/
+document.addEventListener('keydown', (event) => {
+    const currentTime = Date.now();
+    if (
+        (event.key === 'b' || event.key === 'B') &&
+        !blackHoleActivated && level >= 2 &&
+        currentTime - lastBlackHoleTime >= BLACK_HOLE_COOLDOWN
+    ) {
+        lastBlackHoleTime = currentTime;
+        activateBlackHolePowerUp(canvas.width / 2, canvas.height / 2);
+    }
+});
 
 
 canvas.addEventListener('mousedown', (event) => {
@@ -509,7 +535,7 @@ function gameLoop() {
     updateBubbles();
     updateLevel();
     drawBubbles();
-    //drawBlackHoleCountdown();
+    drawBlackHoleCountdown();
     requestAnimationFrame(gameLoop);
 }
 
