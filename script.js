@@ -20,7 +20,9 @@ let blackHoleActivated = false;
 let lastBlackHoleTime = 0;
 const BLACK_HOLE_COOLDOWN = 20000;
 const BLACK_HOLE_DURATION = 5000;  // 5 Sekunden
-let blackHoleStartTime = 0;         
+let blackHoleStartTime = 0;   
+const bubble = document.getElementById('bubble');
+let startX = 0;      
 
 
 function updateLevel() {
@@ -95,7 +97,6 @@ function updateRotatingBubble() {
         
     }
 }
-    
 
 function updateBubbles() {
     bubbles = bubbles.filter(bubble => {
@@ -126,7 +127,6 @@ function updateBubbles() {
         }
     });
 }
-
 
 function drawRotationGuide() {
     if (!rotatingBubble) return;
@@ -178,8 +178,7 @@ function drawRotationGuide() {
 
     ctx.restore();
 }
-    
-
+ 
 function drawRotatingBubble() {
     if (rotatingBubble) {
         drawRotationGuide(rotatingBubble); // Dynamischer Kreis und Pfeil
@@ -294,50 +293,49 @@ function createExplosion(x, y, radius) {
     }
 }
 
+function rotateBubble(direction) {
+    if (rotatingBubble) {
+        const rotationSpeed = 0.1;
+        if (direction === 'left') {
+            rotatingBubble.rotation -= rotationSpeed;
+        } else if (direction === 'right') {
+            rotatingBubble.rotation += rotationSpeed;
+        }
+    }
+}
 
-
-canvas.addEventListener('touchstart', (event) => {
+// Verbessere die Touch-Event-Handler
+canvas.addEventListener('touchstart', event => {
     event.preventDefault();
+    
+    // Für zwei Finger
     if (event.touches.length === 2) {
         touchPositions = Array.from(event.touches).map(touch => ({
             x: touch.clientX - canvas.getBoundingClientRect().left,
             y: touch.clientY - canvas.getBoundingClientRect().top,
         }));
-    } else {
-        const touch = event.touches[0];
+    } 
+    // Für einen Finger
+    else if (event.touches.length === 1) {
+        startX = event.touches[0].clientX;
         const rect = canvas.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
+        const x = (event.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+        const y = (event.touches[0].clientY - rect.top) * (canvas.height / rect.height);
         checkBubbleHit(x, y);
     }
 });
 
-
-/*
-canvas.addEventListener('touchstart', (event) => {
+canvas.addEventListener('touchmove', event => {
     event.preventDefault();
-    if(event.touches.length === 2) {
-        touchPositions = Array.from(event.touches).map(touch => ({
-            x: touch.clientX - canvas.getBoundingClientRect().left,
-            y: touch.clientY - canvas.getBoundingClientRect().top,
-        }));
-    }
-    const touch = event.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-    checkBubbleHit(x, y);
-});
-*/
-
-canvas.addEventListener('touchmove', (event) => {
+    const currentTime = Date.now();
+    
+    // Für zwei Finger - Black Hole Aktivierung
     if (event.touches.length === 2 && touchPositions.length === 2) {
         const currentTouches = Array.from(event.touches).map(touch => ({
             x: touch.clientX - canvas.getBoundingClientRect().left,
             y: touch.clientY - canvas.getBoundingClientRect().top,
         }));
 
-        // Berechne den Abstand zwischen den beiden Fingern
         const initialDistance = Math.hypot(
             touchPositions[0].x - touchPositions[1].x,
             touchPositions[0].y - touchPositions[1].y
@@ -347,15 +345,67 @@ canvas.addEventListener('touchmove', (event) => {
             currentTouches[0].y - currentTouches[1].y
         );
 
-        // Aktiviere das schwarze Loch, wenn der Abstand stark zunimmt oder abnimmt
-        if (!blackHoleActivated && Math.abs(currentDistance - initialDistance) > 50) {
-            activateBlackHolePowerUp(
-                (currentTouches[0].x + currentTouches[1].x) / 2,
-                (currentTouches[0].y + currentTouches[1].y) / 2
-            );
-            blackHoleActivated = true;
+        // Füge console.log für Debugging hinzu
+        console.log('Initial Distance:', initialDistance);
+        console.log('Current Distance:', currentDistance);
+        console.log('Distance Difference:', initialDistance - currentDistance);
+
+        // Aktiviere Black Hole wenn Finger zusammengezogen werden
+        if (!blackHoleActivated && 
+            level >= 2 &&
+            currentTime - lastBlackHoleTime >= BLACK_HOLE_COOLDOWN &&
+            (initialDistance - currentDistance) > 50) // Mindestens 50px Unterschied
+        {
+            console.log('Activating Black Hole!');
+            lastBlackHoleTime = currentTime;
+            activateBlackHolePowerUp();
         }
     }
+    // Für einen Finger - Bubble Rotation
+    else if (event.touches.length === 1 && rotatingBubble) {
+        const currentX = event.touches[0].clientX;
+        const deltaX = currentX - startX;
+
+        if (Math.abs(deltaX) > 10) {
+            rotateBubble(deltaX > 0 ? 'right' : 'left');
+            startX = currentX;
+        }
+    }
+});
+
+function resizeCanvas() {
+    const container = document.getElementById('gamecontainer');
+    const containerWidth = container.offsetWidth;
+    const containerHeight = container.offsetHeight;
+    canvas.width = containerWidth;
+    canvas.height = containerHeight;
+    scaleGame(containerWidth, containerHeight);
+}
+function scaleGame(width, height) {
+    const scaleX = width/600;
+    const scaleY = height/600;
+    const scale = Math.min(scaleX, scaleY);
+    bubbles.forEach(bubble => {
+        bubble.x *= scale;
+        bubble.y *= scale;
+        bubble.radius *= scale;
+        bubble.speed *= scale;
+    });
+    if (rotatingBubble) {
+        rotatingBubble.x *= scale;
+        rotatingBubble.y *= scale;
+        rotatingBubble.radius *= scale;
+    }
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+canvas.addEventListener('touchstart', event => {
+    event.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const x = (event.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+    const y = (event.touches[0].clientY - rect.top) * (canvas.height / rect.height);
+    checkBubbleHit(x, y);
 });
 
 
@@ -464,10 +514,9 @@ function drawBlackHoleCountdown() {
     } else if (!blackHoleActivated) {
         ctx.font = '20px Arial';
         ctx.fillStyle = 'green';
-        ctx.fillText('Black Hole Ready! Press B.', 350, 40);
+        ctx.fillText('Black Hole Ready!', 350, 40);
     }
 }
-
 
 
 /*
@@ -511,6 +560,36 @@ document.addEventListener('keydown', (event) => {
         }
    }
 });
+
+
+if (bubble) {
+    bubble.addEventListener("touchstart", (event) => {
+        startX = event.touches[0].clientX;
+        const rect = canvas.getBoundingClientRect();
+        const x = startX - rect.left;
+        const y = event.touches[0].clientY - rect.top;
+        checkBubbleHit(x, y);
+    });
+
+
+
+bubble.addEventListener("touchmove", (event) => {
+    event.preventDefault();
+    const currentX = event.touches[0].clientX;
+    const deltaX = currentX - startX;
+
+    if (Math.abs(deltaX) > 10) { // Schwellenwert, um versehentliche Bewegungen zu ignorieren
+        if (deltaX > 0) {
+            rotateBubble('right'); // Drehe Blase nach rechts
+        } else {
+            rotateBubble('left'); // Drehe Blase nach links
+        }
+        startX = currentX; // Startposition aktualisieren
+    }
+});
+}
+
+    
 
 function resetGame() {
     bubbles = [];
