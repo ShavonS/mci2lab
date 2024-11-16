@@ -304,7 +304,6 @@ function rotateBubble(direction) {
     }
 }
 
-// Verbessere die Touch-Event-Handler
 canvas.addEventListener('touchstart', event => {
     event.preventDefault();
     
@@ -344,11 +343,6 @@ canvas.addEventListener('touchmove', event => {
             currentTouches[0].x - currentTouches[1].x,
             currentTouches[0].y - currentTouches[1].y
         );
-
-        // Füge console.log für Debugging hinzu
-        console.log('Initial Distance:', initialDistance);
-        console.log('Current Distance:', currentDistance);
-        console.log('Distance Difference:', initialDistance - currentDistance);
 
         // Aktiviere Black Hole wenn Finger zusammengezogen werden
         if (!blackHoleActivated && 
@@ -518,18 +512,6 @@ function drawBlackHoleCountdown() {
     }
 }
 
-
-/*
-document.addEventListener('keydown', (event) => {
-    const currentTime = Date.now();
-    if ((event.key === 'b' || event.key === 'B') && !blackHoleActivated && level >= 2 ) { 
-        const centerX = canvas.width / 2; // Schwarzes Loch in der Mitte
-        const centerY = canvas.height / 2;
-        alert('Black Hole Activated!');
-        activateBlackHolePowerUp(centerX, centerY);
-    }
-});
-*/
 document.addEventListener('keydown', (event) => {
     const currentTime = Date.now();
     if (
@@ -578,7 +560,7 @@ bubble.addEventListener("touchmove", (event) => {
     const currentX = event.touches[0].clientX;
     const deltaX = currentX - startX;
 
-    if (Math.abs(deltaX) > 10) { // Schwellenwert, um versehentliche Bewegungen zu ignorieren
+    if (Math.abs(deltaX) > 8) { // Schwellenwert, um versehentliche Bewegungen zu ignorieren
         if (deltaX > 0) {
             rotateBubble('right'); // Drehe Blase nach rechts
         } else {
