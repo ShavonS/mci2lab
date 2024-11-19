@@ -1,92 +1,107 @@
-/* Allgemeine Stile für die Seite */
+/* Stil für das Canvas, das das Spiel enthält */
+#gamecnv {
+    background: linear-gradient(180deg, #006994 0%, #00334E 100%);
+    border: 2px solid #333;
+    border-radius: 10px;
+    box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
+    display: block;
+    margin: 20px auto;
+}
+
+.info-box {
+    position: absolute;
+    top: 20px;
+    padding: 8px 15px;
+    font-family: 'Arial', sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: #FFFFFF;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+}
+
+#scoreBox { left: 20px; } /* Score links oben */
+#missBox { right: 20px; } /* Misses rechts oben */
+#levelBox { left: 50%; transform: translateX(-50%); } /* Level mittig */
+
+/* Design für den Spiel-Score und verpasste Blasen */
+#scoreBoard {
+    font-family: 'Arial', sans-serif;
+    color: #FFFFFF;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    margin-top: 10px;
+    width: 200px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
+    margin: 0 auto;
+}
+
+/* Für den Score-Anstieg ein sanftes Farbblinken */
+@keyframes scoreFlash {
+    0%, 100% { color: #FFFFFF; }
+    50% { color: #529ff7; } /* Goldfarbenes Blinken */
+}
+
+.score-increase {
+    animation: scoreFlash 0.5s ease-in-out;
+}
+
+/* Stil für das Game-Over-Popup */
+#gameOverPopup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #FFFFFF;
+    font-family: 'Arial', sans-serif;
+    font-size: 24px;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    display: none; /* wird im Spiel angezeigt */
+}
+
+#gameOverPopup button {
+    background-color: #FFD700;
+    color: #333;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#gameOverPopup button:hover {
+    background-color: #FFA500;
+}
+
 body {
     margin: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background: #111; /* Dunkler Hintergrund */
-    overflow: hidden; /* Verhindert Scrollen außerhalb des Bereichs */
-    font-family: Arial, sans-serif; /* Standard-Schriftart */
-}
-
-/* Container für das Spiel */
-#gamecontainer {
+    background: #111;
+  }
+  #gamecontainer {
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 100%;
-    height: 100%; /* Füllt die gesamte Höhe */
-    max-width: 800px; /* Begrenzte Breite für große Bildschirme */
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); /* Schatten für mehr Tiefe */
-    padding: 10px; /* Abstand im Container */
-    border-radius: 10px; /* Leicht abgerundete Ecken */
-    background-color: #222; /* Dunkler Hintergrund für den Container */
-}
-
-/* Canvas für das Spiel */
-#gamecnv {
-    background: linear-gradient(180deg, #006994 0%, #00334E 100%); /* Farbverlauf von oben nach unten */
-    border: 2px solid #333; /* Dunkler Rand um das Canvas */
-    border-radius: 10px; /* Abgerundete Ecken */
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3); /* Schatteneffekt */
-    display: block;
-    margin: 0; /* Entfernt den Abstand */
-    width: 100%; /* Füllt die gesamte Breite */
-    height: 100%; /* Füllt die gesamte Höhe */
-}
-
-/* Button-Stil (falls du Buttons hinzufügst) */
-button {
-    padding: 10px 20px;
-    margin-top: 20px;
-    font-size: 16px;
-    color: #fff;
-    background-color: #006994; /* Passend zum Canvas-Farbverlauf */
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #00557a; /* Etwas dunklerer Farbton beim Hover */
-}
-
-/* Text für Spiel-Level-Anzeige */
-.level-indicator {
-    font-size: 18px;
-    color: #fff;
-    margin-top: 10px;
-    text-align: center;
-}
-
-/* Bubble-Stil */
-.bubble {
-    border: 2px solid #00557a; /* Konturfarbe */
-    border-radius: 50%; /* Runde Form */
-    background: linear-gradient(135deg, #00aaff, #00557a); /* Farbverlauf */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Schatten für 3D-Effekt */
-    width: 50px; /* Beispielgröße */
-    height: 50px; /* Beispielgröße */
-    display: inline-block; /* Inline-Block für mehrere Blasen */
-    margin: 10px; /* Abstand zwischen den Blasen */
-}
-
-/* Responsive Anpassungen */
-@media (max-width: 600px) {
-    #gamecontainer {
-        max-width: 95%; /* Reduzierte Breite für kleinere Bildschirme */
-    }
-
-    #gamecnv {
-        margin: 10px auto; /* Weniger Abstand für kleinere Bildschirme */
-    }
-
-    button {
-        font-size: 14px;
-        padding: 8px 16px; /* Kleinere Buttons auf kleinen Bildschirmen */
-    }
-}
+    max-width: 800px;
+  }
+  canvas {
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+  }
