@@ -200,8 +200,14 @@ function drawRotatingBubble() {
         // Blase zeichnen
         ctx.beginPath();
         ctx.arc(0, 0, rotatingBubble.radius, 0, Math.PI * 2);
-        ctx.fillStyle = rotatingBubble.hasRotatedCorrectly ? 'rgba(0, 255, 0, 0.7)' : 'rgba(255, 0, 0, 0.7)';
+        const gradient = ctx.createRadialGradient(0, 0, rotatingBubble.radius * 0.3, 0, 0, rotatingBubble.radius);
+        gradient.addColorStop(0, 'rgba(255, 0, 0, 0.7)');
+        gradient.addColorStop(1, 'rgba(139, 0, 0, 0.7)');
+        ctx.fillStyle = gradient;
         ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(255, 0, 0, 1)';
+        ctx.stroke();
         ctx.closePath();
 
         ctx.restore();
@@ -214,12 +220,22 @@ function drawBubbles() {
     bubbles.forEach(bubble => {
         ctx.save();
         ctx.translate(bubble.x, bubble.y);
-        ctx.rotate(bubble.rotation);
 
         ctx.beginPath();
         ctx.arc(0, 0, bubble.radius, 0, Math.PI * 2);
-        ctx.fillStyle = bubble.isPowerUp ? 'orange' : 'rgba(0, 150, 255, 0.7)';
+        const gradient = ctx.createRadialGradient(0, 0, bubble.radius * 0.3, 0, 0, bubble.radius);
+        if (bubble.isPowerUp) {
+            gradient.addColorStop(0, 'orange');
+            gradient.addColorStop(1, 'darkorange');
+        } else {
+            gradient.addColorStop(0, 'rgba(0, 150, 255, 0.7)');
+            gradient.addColorStop(1, 'rgba(0, 0, 139, 0.7)');
+        }
+        ctx.fillStyle = gradient;
         ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = bubble.isPowerUp ? 'orange' : 'rgba(0, 0, 255, 1)';
+        ctx.stroke();
         ctx.closePath();
 
         ctx.restore();
@@ -371,13 +387,25 @@ function resizeCanvas() {
     const container = document.getElementById('gamecontainer');
     const containerWidth = container.offsetWidth;
     const containerHeight = container.offsetHeight;
-    canvas.width = containerWidth;
-    canvas.height = containerHeight;
-    scaleGame(containerWidth, containerHeight);
+    const aspectRatio = 1; // Assuming a square aspect ratio for the game
+    let newWidth, newHeight;
+
+    if (containerWidth / containerHeight > aspectRatio) {
+        newHeight = containerHeight;
+        newWidth = containerHeight * aspectRatio;
+    } else {
+        newWidth = containerWidth;
+        newHeight = containerWidth / aspectRatio;
+    }
+
+    canvas.width = newWidth;
+    canvas.height = newHeight;
+    scaleGame(newWidth, newHeight);
 }
+
 function scaleGame(width, height) {
-    const scaleX = width/600;
-    const scaleY = height/600;
+    const scaleX = width / 600;
+    const scaleY = height / 600;
     const scale = Math.min(scaleX, scaleY);
     bubbles.forEach(bubble => {
         bubble.x *= scale;
@@ -391,6 +419,7 @@ function scaleGame(width, height) {
         rotatingBubble.radius *= scale;
     }
 }
+
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
