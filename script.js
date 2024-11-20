@@ -493,22 +493,25 @@ function drawBlackHoleCountdown() {
         BLACK_HOLE_COOLDOWN - (currentTime - lastBlackHoleTime)
     );
 
-    if(level < 2) {
-        return; 
+    if (level < 2) {
+        return;
     }
 
+    ctx.font = '20px Arial';
+    let message;
     if (cooldownRemaining > 0) {
-        ctx.font = '20px Arial';
         ctx.fillStyle = 'white';
-        ctx.fillText(
-            `Black Hole Ready in: ${(cooldownRemaining / 1000).toFixed(1)}s`,
-            350,
-            40
-        );
+        message = `Black Hole Ready in: ${(cooldownRemaining / 1000).toFixed(1)}s`;
     } else if (!blackHoleActivated) {
-        ctx.font = '20px Arial';
         ctx.fillStyle = 'green';
-        ctx.fillText('Black Hole Ready!', 350, 40);
+        message = 'Black Hole Ready!';
+    }
+
+    if (message) {
+        const textWidth = ctx.measureText(message).width;
+        const canvasCenterX = ctx.canvas.width / 2;
+        const offsetX = 50;
+        ctx.fillText(message, canvasCenterX - textWidth / 2 + offsetX, 40);
     }
 }
 

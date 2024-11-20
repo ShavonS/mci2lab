@@ -7,9 +7,9 @@ This is an interactive bubble popping game with a unique black hole power-up fea
 ## How to Play
 1. **Pop Bubbles**: Click on the bubbles to pop them and earn points.
 2. **Avoid Missing**: Don't let too many bubbles escape the screen. You can miss up to 3 bubbles.
-3. **Black Hole Power-Up**: Activate the black hole power-up by pressing the 'B' key. The black hole can only be activated once every 90 seconds and will clear all bubbles on the screen.
-4. **Two-Finger Interaction**: Use a two-finger pinch gesture to activate the black hole power-up. The black hole will be activated if the distance between your fingers changes significantly.
-5. **Level Up**: Your level increases as you score more points, making the game more challenging.
+3. **Black Hole Power-Up**:Activate the black hole power-up by pressing the 'B' key. On mobile you need to use two fingers to activate the power-up.
+The black hole can only be activated once every 15 seconds and will clear all bubbles on the screen.
+4. **Level Up**: Your level increases as you score more points, making the game more challenging.
 
 ## Controls
 - **Mouse**: Click to pop bubbles.
